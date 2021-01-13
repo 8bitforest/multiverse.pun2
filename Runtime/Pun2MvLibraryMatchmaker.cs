@@ -19,7 +19,7 @@ namespace Multiverse.Pun2
 
         public async Task Connect()
         {
-            if (PhotonNetwork.IsConnected)
+            if (PhotonNetwork.IsConnected && PhotonNetwork.InLobby)
                 return;
 
             _connectTask = new TaskCompletionSource();
@@ -28,6 +28,11 @@ namespace Multiverse.Pun2
         }
 
         public override void OnConnectedToMaster()
+        {
+            PhotonNetwork.JoinLobby();
+        }
+
+        public override void OnJoinedLobby()
         {
             _connectTask?.SetResult();
             _connectTask = null;
