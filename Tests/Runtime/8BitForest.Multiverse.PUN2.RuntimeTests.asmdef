@@ -1,0 +1,24 @@
+{
+    "name": "8BitForest.Multiverse.PUN2.RuntimeTests",
+    "rootNamespace": "Multiverse.Pun2.Tests",
+    "references": [
+        "GUID:27619889b8ba8c24980f49ee34dbb44a",
+        "GUID:0acc523941302664db1f4e527237feb3",
+        "GUID:beac9761956c849df92d2229c08a4192",
+        "GUID:521afff039b264ddb8f24c5dc56a3bc4"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": true,
+    "precompiledReferences": [
+        "nunit.framework.dll"
+    ],
+    "autoReferenced": false,
+    "defineConstraints": [
+        "UNITY_INCLUDE_TESTS",
+        "!MULTIVERSE_TEST_SERVER || MULTIVERSE_TEST_SERVER_PUN2"
+    ],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
