@@ -17,5 +17,10 @@ namespace Multiverse.Pun2
         {
             ((IMvLibraryClient) this).OnDisconnected.AsOwner.Invoke();
         }
+
+        public override void OnMasterClientSwitched(Player newMasterClient)
+        {
+            MvNetworkManager.I.Client.Disconnect();
+        }
     }
 }
