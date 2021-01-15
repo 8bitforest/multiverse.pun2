@@ -11,9 +11,21 @@ namespace Multiverse.Pun2
             PhotonNetwork.Disconnect();
         }
 
+        public IMvLibraryServer GetServer()
+        {
+            return gameObject.AddComponent<Pun2MvLibraryServer>();
+        }
+
+        public IMvLibraryClient GetClient()
+        {
+            return gameObject.AddComponent<Pun2MvLibraryClient>();
+        }
+
         public IMvLibraryMatchmaker GetMatchmaker()
         {
             return GetComponent<Pun2MvLibraryMatchmaker>();
         }
+
+        public void CleanupAfterDisconnect() { }
     }
 }

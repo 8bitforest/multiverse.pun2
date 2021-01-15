@@ -3,19 +3,21 @@ using System.Linq;
 using System.Threading.Tasks;
 using Photon.Pun;
 using Photon.Realtime;
+using Reaction;
 
 namespace Multiverse.Pun2
 {
     public class Pun2MvLibraryMatchmaker : MonoBehaviourPunCallbacks, IMvLibraryMatchmaker
     {
+        public bool Connected => PhotonNetwork.IsConnected;
+        RxnEvent IMvLibraryMatchmaker.OnDisconnected { get; } = new RxnEvent();
+
         private TaskCompletionSource _connectTask;
         private TaskCompletionSource _disconnectTask;
         private TaskCompletionSource _createMatchTask;
         private TaskCompletionSource _joinMatchTask;
 
         private IEnumerable<IMvMatch> _matchListCache = new List<IMvMatch>();
-
-        public bool Connected => PhotonNetwork.IsConnected;
 
         public async Task Connect()
         {
@@ -31,7 +33,7 @@ namespace Multiverse.Pun2
         {
             PhotonNetwork.JoinLobby();
         }
-
+        
         public override void OnJoinedLobby()
         {
             _connectTask?.SetResult();
@@ -46,6 +48,7 @@ namespace Multiverse.Pun2
             _disconnectTask = new TaskCompletionSource();
             PhotonNetwork.Disconnect();
             await _disconnectTask.Task;
+            ((IMvLibraryMatchmaker) this).OnDisconnected.AsOwner.Invoke();
         }
 
         public override void OnDisconnected(DisconnectCause cause)
@@ -95,9 +98,9 @@ namespace Multiverse.Pun2
             _joinMatchTask = null;
         }
 
-        public async Task<IEnumerable<IMvMatch>> GetMatchList()
+        public Task<IEnumerable<IMvMatch>> GetMatchList()
         {
-            return _matchListCache;
+            return Task.FromResult(_matchListCache);
         }
 
         public override void OnRoomListUpdate(List<RoomInfo> roomList)
