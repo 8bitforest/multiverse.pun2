@@ -5,13 +5,22 @@ using UnityEngine;
 namespace Multiverse.Pun2.Tests
 {
     [SetUpFixture]
-    public class Pun2TestSetUp : MultiverseTestSetUp<Pun2LibraryAdder> { }
-    
+    public class LibraryTestSetUp : MultiverseTestSetUp<Pun2LibraryAdder> { }
+
     [TestFixture]
-    public class Pun2MatchmakerTests : MatchmakerTests { }
-    
+    public class LibraryMatchmakerTests : MatchmakerTests { }
+
     [TestFixture]
-    public class Pun2MatchmakerClientTests : MatchmakerClientTests { }
+    public class LibraryClientNotJoinedTests : ClientNotJoinedTests { }
+
+    [TestFixture]
+    public class LibraryClientJoinedTests : ClientJoinedTests { }
+
+    [TestFixture]
+    public class LibraryServerNotCreatedTests : ServerNotCreatedTests { }
+
+    [TestFixture]
+    public class LibraryServerCreatedTests : ServerCreatedTests { }
 
     public class Pun2LibraryAdder : IMvTestLibraryAdder
     {

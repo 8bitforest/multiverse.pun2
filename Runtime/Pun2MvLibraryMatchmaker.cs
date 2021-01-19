@@ -17,7 +17,7 @@ namespace Multiverse.Pun2
         private TaskCompletionSource _createMatchTask;
         private TaskCompletionSource _joinMatchTask;
 
-        private IEnumerable<IMvMatch> _matchListCache = new List<IMvMatch>();
+        private readonly HashSet<IMvMatch> _matchListCache = new HashSet<IMvMatch>();
 
         public async Task Connect()
         {
@@ -33,7 +33,7 @@ namespace Multiverse.Pun2
         {
             PhotonNetwork.JoinLobby();
         }
-        
+
         public override void OnJoinedLobby()
         {
             _connectTask?.SetResult();
@@ -53,6 +53,7 @@ namespace Multiverse.Pun2
 
         public override void OnDisconnected(DisconnectCause cause)
         {
+            _matchListCache.Clear();
             _disconnectTask?.SetResult();
             _disconnectTask = null;
         }
@@ -69,12 +70,14 @@ namespace Multiverse.Pun2
 
         public override void OnCreatedRoom()
         {
+            _matchListCache.Clear();
             _createMatchTask?.SetResult();
             _createMatchTask = null;
         }
 
         public override void OnCreateRoomFailed(short returnCode, string message)
         {
+            _matchListCache.Clear();
             _createMatchTask?.SetException(new MvException(message));
             _createMatchTask = null;
         }
@@ -88,6 +91,7 @@ namespace Multiverse.Pun2
 
         public override void OnJoinedRoom()
         {
+            _matchListCache.Clear();
             _joinMatchTask?.SetResult();
             _joinMatchTask = null;
         }
@@ -100,17 +104,19 @@ namespace Multiverse.Pun2
 
         public Task<IEnumerable<IMvMatch>> GetMatchList()
         {
-            return Task.FromResult(_matchListCache);
+            return Task.FromResult(_matchListCache.AsEnumerable());
         }
 
         public override void OnRoomListUpdate(List<RoomInfo> roomList)
         {
-            _matchListCache = roomList.Select(r => new DefaultMvMatch
-            {
-                Id = r.Name,
-                Name = r.Name,
-                MaxPlayers = r.MaxPlayers
-            });
+            _matchListCache.Clear();
+            foreach (var match in roomList)
+                _matchListCache.Add(new DefaultMvMatch
+                {
+                    Id = match.Name,
+                    Name = match.Name,
+                    MaxPlayers = match.MaxPlayers
+                });
         }
     }
 }

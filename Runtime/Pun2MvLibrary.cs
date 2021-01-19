@@ -27,5 +27,10 @@ namespace Multiverse.Pun2
         }
 
         public void CleanupAfterDisconnect() { }
+
+        public void SetTimeout(float seconds)
+        {
+            PhotonNetwork.NetworkingClient.LoadBalancingPeer.DisconnectTimeout = (int) (seconds * 1000);
+        }
     }
 }
