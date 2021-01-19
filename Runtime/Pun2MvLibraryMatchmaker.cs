@@ -17,7 +17,7 @@ namespace Multiverse.Pun2
         private TaskCompletionSource _createMatchTask;
         private TaskCompletionSource _joinMatchTask;
 
-        private readonly HashSet<IMvMatch> _matchListCache = new HashSet<IMvMatch>();
+        private readonly HashSet<MvMatch> _matchListCache = new HashSet<MvMatch>();
 
         public async Task Connect()
         {
@@ -82,7 +82,7 @@ namespace Multiverse.Pun2
             _createMatchTask = null;
         }
 
-        public async Task JoinMatch(IMvMatch match)
+        public async Task JoinMatch(MvMatch match)
         {
             _joinMatchTask = new TaskCompletionSource();
             PhotonNetwork.JoinRoom(match.Id);
@@ -102,7 +102,7 @@ namespace Multiverse.Pun2
             _joinMatchTask = null;
         }
 
-        public Task<IEnumerable<IMvMatch>> GetMatchList()
+        public Task<IEnumerable<MvMatch>> GetMatchList()
         {
             return Task.FromResult(_matchListCache.AsEnumerable());
         }
@@ -111,12 +111,7 @@ namespace Multiverse.Pun2
         {
             _matchListCache.Clear();
             foreach (var match in roomList)
-                _matchListCache.Add(new DefaultMvMatch
-                {
-                    Id = match.Name,
-                    Name = match.Name,
-                    MaxPlayers = match.MaxPlayers
-                });
+                _matchListCache.Add(new MvMatch(match.Name, match.Name, match.MaxPlayers));
         }
     }
 }

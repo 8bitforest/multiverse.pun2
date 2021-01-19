@@ -8,11 +8,11 @@ namespace Multiverse.Pun2
 {
     public class Pun2MvLibraryClient : MonoBehaviourPunCallbacks, IMvLibraryClient
     {
-        public IMvConnection LocalConnection { get; private set; }
-        public RxnSet<IMvConnection> Connections { get; } = new RxnSet<IMvConnection>();
-        
+        public MvConnection LocalConnection { get; private set; }
+        public RxnSet<MvConnection> Connections { get; } = new RxnSet<MvConnection>();
+
         RxnEvent IMvLibraryClient.OnDisconnected { get; } = new RxnEvent();
-        
+
         private void Awake()
         {
             LocalConnection = NewConnectionForPlayer(PhotonNetwork.LocalPlayer);
@@ -20,7 +20,7 @@ namespace Multiverse.Pun2
             foreach (var player in PhotonNetwork.PlayerListOthers)
                 Connections.AsOwner.Add(NewConnectionForPlayer(player));
         }
-        
+
         public override void OnLeftRoom()
         {
             ((IMvLibraryClient) this).OnDisconnected.AsOwner.Invoke();
@@ -30,7 +30,7 @@ namespace Multiverse.Pun2
         {
             if (!PhotonNetwork.InRoom)
                 return;
-            
+
             PhotonNetwork.LeaveRoom();
             await ((IMvLibraryClient) this).OnDisconnected.Wait(Multiverse.Timeout);
         }
@@ -51,15 +51,9 @@ namespace Multiverse.Pun2
             Connections.AsOwner.Remove(conn);
         }
 
-        private static IMvConnection NewConnectionForPlayer(Player player)
+        private static MvConnection NewConnectionForPlayer(Player player)
         {
-            return new DefaultMvConnection
-            {
-                Name = player.NickName,
-                Id = player.ActorNumber,
-                IsHost = player.IsMasterClient,
-                IsLocal = player.IsLocal
-            };
+            return new MvConnection(player.NickName, player.ActorNumber, player.IsMasterClient, player.IsLocal);
         }
     }
 }
