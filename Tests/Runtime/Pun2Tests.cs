@@ -1,4 +1,5 @@
 using Multiverse.Tests;
+using Multiverse.Tests.Utils;
 using NUnit.Framework;
 using UnityEngine;
 
@@ -21,6 +22,12 @@ namespace Multiverse.Pun2.Tests
 
     [TestFixture]
     public class LibraryServerCreatedTests : ServerCreatedTests { }
+    
+    [TestFixture]
+    public class LibraryClientMessageTests : ClientMessageTests { }
+    
+    [TestFixture]
+    public class LibraryServerMessageTests : ServerMessageTests { }
 
     public class Pun2LibraryAdder : IMvTestLibraryAdder
     {
