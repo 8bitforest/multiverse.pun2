@@ -1,34 +1,35 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
+using ExitGames.Client.Photon;
 using Multiverse.LibraryInterfaces;
-using Multiverse.Utils;
 using Photon.Pun;
 using Photon.Realtime;
-using Reaction;
 
 namespace Multiverse.Pun2
 {
     public class Pun2MvLibraryMatchmaker : MonoBehaviourPunCallbacks, IMvLibraryMatchmaker
     {
-        public bool Connected => PhotonNetwork.IsConnected;
-        RxnEvent IMvLibraryMatchmaker.OnDisconnected { get; } = new RxnEvent();
+        public Connected Connected { get; set; }
+        public Disconnected Disconnected { get; set; }
+        public Connected ConnectedToMatch { get; set; }
 
-        private TaskCompletionSource _connectTask;
-        private TaskCompletionSource _disconnectTask;
-        private TaskCompletionSource _createMatchTask;
-        private TaskCompletionSource _joinMatchTask;
+        public ErrorHandler HostMatchError { get; set; }
+        public ErrorHandler JoinMatchError { get; set; }
 
-        private readonly HashSet<MvMatch> _matchListCache = new HashSet<MvMatch>();
+        public MatchesUpdated MatchesUpdated { get; set; }
 
-        public async Task Connect()
+        private Dictionary<int, RoomInfo> _rooms = new Dictionary<int, RoomInfo>();
+
+        public void Connect()
         {
             if (PhotonNetwork.IsConnected && PhotonNetwork.InLobby)
+            {
+                Connected();
                 return;
+            }
 
-            _connectTask = new TaskCompletionSource();
             PhotonNetwork.ConnectUsingSettings();
-            await _connectTask.Task;
         }
 
         public override void OnConnectedToMaster()
@@ -38,82 +39,68 @@ namespace Multiverse.Pun2
 
         public override void OnJoinedLobby()
         {
-            _connectTask?.SetResult();
-            _connectTask = null;
+            Connected();
         }
 
-        public async Task Disconnect()
+        public void Disconnect()
         {
             if (!PhotonNetwork.IsConnected)
+            {
+                Disconnected();
                 return;
+            }
 
-            _disconnectTask = new TaskCompletionSource();
             PhotonNetwork.Disconnect();
-            await _disconnectTask.Task;
-            ((IMvLibraryMatchmaker) this).OnDisconnected.AsOwner.Invoke();
         }
 
         public override void OnDisconnected(DisconnectCause cause)
         {
-            _matchListCache.Clear();
-            _disconnectTask?.SetResult();
-            _disconnectTask = null;
+            _rooms.Clear();
+            Disconnected();
         }
 
-        public async Task CreateMatch(string matchName, int maxPlayers)
+        public void HostMatch(byte[] data)
         {
-            _createMatchTask = new TaskCompletionSource();
-            PhotonNetwork.CreateRoom(matchName, new RoomOptions
+            PhotonNetwork.CreateRoom(Guid.NewGuid().ToString(), new RoomOptions
             {
-                MaxPlayers = (byte) maxPlayers
+                MaxPlayers = 0,
+                CustomRoomProperties = new Hashtable {["m"] = data},
+                CustomRoomPropertiesForLobby = new[] {"m"}
             });
-            await _createMatchTask.Task;
-        }
-
-        public override void OnCreatedRoom()
-        {
-            _matchListCache.Clear();
-            _createMatchTask?.SetResult();
-            _createMatchTask = null;
         }
 
         public override void OnCreateRoomFailed(short returnCode, string message)
         {
-            _matchListCache.Clear();
-            _createMatchTask?.SetException(new MvException(message));
-            _createMatchTask = null;
+            _rooms.Clear();
+            HostMatchError(message);
         }
 
-        public async Task JoinMatch(MvMatch match)
+        public void JoinMatch(int libId)
         {
-            _joinMatchTask = new TaskCompletionSource();
-            PhotonNetwork.JoinRoom(match.Id);
-            await _joinMatchTask.Task;
+            PhotonNetwork.JoinRoom(_rooms[libId].Name);
+        }
+
+        public void UpdateMatchList()
+        {
+            MatchesUpdated(_rooms.Values.Select(r => (r.GetHashCode(), (byte[]) r.CustomProperties["m"])));
         }
 
         public override void OnJoinedRoom()
         {
-            _matchListCache.Clear();
-            _joinMatchTask?.SetResult();
-            _joinMatchTask = null;
+            _rooms.Clear();
+            ConnectedToMatch();
         }
 
         public override void OnJoinRoomFailed(short returnCode, string message)
         {
-            _joinMatchTask?.SetException(new MvException(message));
-            _joinMatchTask = null;
-        }
-
-        public Task<IEnumerable<MvMatch>> GetMatchList()
-        {
-            return Task.FromResult(_matchListCache.AsEnumerable());
+            _rooms.Clear();
+            JoinMatchError(message);
         }
 
         public override void OnRoomListUpdate(List<RoomInfo> roomList)
         {
-            _matchListCache.Clear();
-            foreach (var match in roomList)
-                _matchListCache.Add(new MvMatch(match.Name, match.Name, match.MaxPlayers));
+            _rooms = roomList.ToDictionary(r => r.GetHashCode());
+            UpdateMatchList();
         }
     }
 }
